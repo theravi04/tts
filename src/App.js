@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import './App.css';
+import './App.css'; // Import the CSS file
 
 function App() {
   const [text, setText] = useState("");
@@ -8,22 +8,16 @@ function App() {
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load voices and filter by desired accents/languages
+  // Load voices
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
-      const filteredVoices = availableVoices.filter(v =>
-        v.lang.includes("en-IN") || // English India
-        v.lang.includes("en-US") || // English USA
-        v.lang.includes("en-GB") || // English British
-        v.lang.includes("hi-IN")    // Hindi India
-      );
-      setVoices(filteredVoices);
-
-      if (filteredVoices.length > 0 && !selectedVoice) {
-        // Default to English India if available
-        const defaultVoice = filteredVoices.find(v => v.lang.includes("en-IN")) || filteredVoices[0];
-        setSelectedVoice(defaultVoice);
+      setVoices(availableVoices);
+      if (availableVoices.length > 0 && !selectedVoice) {
+        const indianVoice = availableVoices.find((v) =>
+          v.name.toLowerCase().includes("india")
+        );
+        setSelectedVoice(indianVoice || availableVoices[0]);
       }
     };
 
@@ -34,15 +28,22 @@ function App() {
   const handleSpeak = () => {
     if (text.trim() !== "" && selectedVoice && !isLoading) {
       setIsLoading(true);
+      
+      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-
+      
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = selectedVoice;
       utterance.rate = rate;
-
-      utterance.onend = () => setIsLoading(false);
-      utterance.onerror = () => setIsLoading(false);
-
+      
+      utterance.onend = () => {
+        setIsLoading(false);
+      };
+      
+      utterance.onerror = () => {
+        setIsLoading(false);
+      };
+      
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -55,8 +56,11 @@ function App() {
   return (
     <div className="app-container">
       <div className="tts-card">
-        <h1 className="app-title">🎙️ Text to Speech</h1>
+        <h1 className="app-title">
+          🎙️ Text to Speech
+        </h1>
 
+        {/* Textarea */}
         <div className="form-group">
           <textarea
             className="text-input"
@@ -67,6 +71,7 @@ function App() {
           />
         </div>
 
+        {/* Speed control */}
         <div className="form-group">
           <label className="form-label">
             Speed: <span className="speed-value">{rate}</span>
@@ -82,6 +87,7 @@ function App() {
           />
         </div>
 
+        {/* Voice dropdown */}
         <div className="form-group">
           <label className="form-label">Voice:</label>
           <select
@@ -99,6 +105,7 @@ function App() {
           </select>
         </div>
 
+        {/* Control buttons */}
         <div className="form-group">
           {!isLoading ? (
             <button
